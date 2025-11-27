@@ -14,7 +14,6 @@ A little C++20 tool to compute different measures of repetitiveness given an inp
 $ ./repetitiveness /scratch/data/pc/dblp.xml 
 loading file ...
 computing SA ...
-computing CST ...
 RESULT file=/scratch/data/pc/dblp.xml n=296135875 sigma=98 h0=5.26206 r=41037553 z78=16205171 z77=9576082 delta=4310457.967742
 ```
 
@@ -32,6 +31,8 @@ make
 ### Requirements
 
 This tool requires the [SDSL ](https://github.com/xxsds/sdsl-lite/)to be installed on your system.
+
+Because the SDSL uses divsufsort for suffix sorting, the input file **must not contain any zero bytes**, except for the very last byte (sentinel). Unless the sentinel is present at the end of the input, it is appended automatically, potentially causing off-by-one errors in the measures.
 
 Thanks to SDSL, many computations are supported by semi-external data structures, ergo you need some disk space. For performance reasons, however, this tool caches the suffix array in $5n$ bytes of RAM to compute $r$ and $z_{77}$. Furthermore, $z_{78}$ is computed in RAM and requires $\lceil\!\lceil 17 z_{78} \rceil\!\rceil$ bytes of RAM, the hyperceil operator stemming from capacity doubling in `std::vector`.
 

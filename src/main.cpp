@@ -105,11 +105,13 @@ int main(int argc, char** argv) {
 
         text = sdsl::int_vector<8>(s.size());
         for(size_t i = 0; i < s.size(); i++) {
+            if(s[i] == 0 && i < s.size() - 1) {
+                std::cerr << " failed -- the input file must not contain any zero bytes!" << std::endl;
+                return -2;
+            }
             text[i] = (unsigned char)s[i];
         }
-        sdsl::append_zero_symbol(text);
-
-        assert(text.size()==s.size());
+        if(text[text.size()-1] != 0) sdsl::append_zero_symbol(text);
     }
     sdsl::store_to_cache(text, sdsl::conf::KEY_TEXT, cc);
     std::cerr << std::endl;
