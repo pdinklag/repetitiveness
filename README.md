@@ -33,7 +33,7 @@ make
 
 This tool requires the [SDSL ](https://github.com/xxsds/sdsl-lite/)to be installed on your system.
 
-Thanks to SDSL, many computations are supported by semi-external data structures. For performance reasons, however, this tool caches the suffix array in $5n$ bytes of RAM to compute $z_{77}$. Furthermore, $z_{78}$ is computed in RAM and requires $\lceil\!\lceil 17 z_{78} \rceil\!\rceil$ bytes of RAM, the hyperceil operator stemming from capacity doubling in `std::vector`.
+Thanks to SDSL, many computations are supported by semi-external data structures, ergo you need some disk space. For performance reasons, however, this tool caches the suffix array in $5n$ bytes of RAM to compute $r$ and $z_{77}$. Furthermore, $z_{78}$ is computed in RAM and requires $\lceil\!\lceil 17 z_{78} \rceil\!\rceil$ bytes of RAM, the hyperceil operator stemming from capacity doubling in `std::vector`.
 
 ### License
 

@@ -120,23 +120,16 @@ int main(int argc, char** argv) {
     std::cerr << "computing SA ...";
     std::cerr.flush();
     sdsl::construct_sa<8>(cc);
-    std::cerr << std::endl;
 
     // cache SA in RAM
+    sdsl::int_vector_buffer<> sa_buf(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
     sdsl::int_vector<40> sa(n);
     {
-        sdsl::int_vector_buffer<> sa_buf(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
+        
         for(size_t i = 0; i < n; i++) {
             sa[i] = sa_buf[i];
         }
     }
-
-    // construct cst
-    std::cerr << "computing CST ...";
-    std::cerr.flush();
-
-    sdsl::cst_sct3<> st;
-    sdsl::construct(st, "", cc, 8);
 
     std::cerr << std::endl;
 
@@ -146,11 +139,9 @@ int main(int argc, char** argv) {
     // n
     std::cout << " n=" << n; std::cout.flush();
 
-    // alphabet size
-    std::cout << " sigma=" << st.csa.sigma ; std::cout.flush();
-
-    // H0 entropy
-    std::cout << " h0="; std::cout.flush();
+    // alphabet and H0 entropy
+    std::cout << " sigma="; std::cout.flush();
+    size_t sigma = 0;
     double h0 = 0;
     {
         size_t hist[256];
@@ -160,21 +151,28 @@ int main(int argc, char** argv) {
 
         for(size_t c = 0; c < 256; c++) {
             auto const nc = hist[c];
-            if(nc) h0 += (double(nc) / double(n)) * std::log2(double(n) / double(nc));
+            if(nc) {
+                ++sigma;
+                h0 += (double(nc) / double(n)) * std::log2(double(n) / double(nc));
+            }
         }
     }
-    std::cout << h0; std::cout.flush();
+    std::cout << sigma << " h0=" << h0; std::cout.flush();
 
     // BWT runs
     std::cout << " r="; std::cout.flush();
     size_t r = 0;
     {
-        auto const& bwt = st.csa.bwt;
-        auto it = bwt.begin();
-        auto last = *it;
-        for(; it != bwt.end(); it++) {
-            if(last != *it) ++r;
-            last = *it;
+        auto bwt = [&](size_t const i){
+            auto const j = sa[i];
+            return j > 0 ? text[j-1] : text[n-1];
+        };
+        
+        uint8_t last = bwt(0);
+        for(size_t i = 1; i < n; i++) {
+            auto const c = bwt(i);
+            if(c != last) ++r;
+            last = c;
         }
     }
     std::cout << r; std::cout.flush();
@@ -200,8 +198,8 @@ int main(int argc, char** argv) {
     std::cout << " z77="; std::cout.flush();
     size_t z77 = 0;
     {
-        // auto const& sa = st.csa;
-        auto const& isa = st.csa.isa;
+        sdsl::construct_isa(cc);
+        sdsl::int_vector_buffer<> isa(sdsl::cache_file_name(sdsl::conf::KEY_ISA, cc));
         
         for(size_t i = 0; i < n;) {
             auto const cur_pos = isa[i];
@@ -227,6 +225,7 @@ int main(int argc, char** argv) {
             i += factor_len;
             ++z77;
         }
+        sdsl::remove(sdsl::cache_file_name(sdsl::conf::KEY_ISA, cc));
     }
     std::cout << z77; std::cout.flush();
 
@@ -234,7 +233,8 @@ int main(int argc, char** argv) {
     std::cout << " delta="; std::cout.flush();
     double delta = 0;
     {
-        auto const& lcp = st.lcp;
+        sdsl::construct_lcp_PHI<8>(cc);
+        sdsl::int_vector_buffer<> lcp(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
 
         std::vector<uint32_t> dk(n, 0);
         for(size_t i=1; i < n; i++) {
@@ -259,6 +259,7 @@ int main(int argc, char** argv) {
                 delta = delta_i;
             }
         }
+        sdsl::remove(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
     }
     std::cout << std::fixed << delta; std::cout.flush();
     std::cout << std::endl;
