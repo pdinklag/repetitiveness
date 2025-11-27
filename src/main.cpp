@@ -86,8 +86,13 @@ public:
 
 int main(int argc, char** argv) {
     if(argc < 2) {
-        std::cerr << "usage: " << argv[0] << " <FILE>" << std::endl;
+        std::cerr << "usage: " << argv[0] << " <FILE> [prefix]" << std::endl;
         return -1;
+    }
+
+    size_t prefix = SIZE_MAX;
+    if(argc >= 3) {
+        prefix = std::atoll(argv[2]);
     }
 
     sdsl::cache_config cc;
@@ -99,9 +104,16 @@ int main(int argc, char** argv) {
 
     sdsl::int_vector<8> text;
     {
-        std::ifstream ifs(argv[1]);
         std::string s;
-        s = std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+        {
+            std::ifstream ifs(argv[1]);
+            std::istreambuf_iterator<char> it(ifs);
+            std::istreambuf_iterator<char> end;
+
+            while(it != end && s.size() < prefix) {
+                s.push_back(*it++);
+            }
+        }
 
         text = sdsl::int_vector<8>(s.size());
         for(size_t i = 0; i < s.size(); i++) {

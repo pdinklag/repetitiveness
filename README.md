@@ -17,6 +17,8 @@ computing SA ...
 RESULT file=/scratch/data/pc/dblp.xml n=296135875 sigma=98 h0=5.26206 r=41037553 z78=16205171 z77=9576082 delta=4310457.967742
 ```
 
+As a second argument, you may also give the length of the prefix of the input file to consider.
+
 ## Usage
 
 ### Building
