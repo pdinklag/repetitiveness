@@ -96,7 +96,6 @@ int main(int argc, char** argv) {
     }
 
     sdsl::cache_config cc;
-    cc.delete_files = true;
 
     // load file
     std::cerr << "loading file ...";
@@ -129,6 +128,7 @@ int main(int argc, char** argv) {
     std::cerr << std::endl;
 
     auto const n = text.size();
+    auto const actual_n = n - 1; // not taking into account the sentinel
 
     // construct SA
     std::cerr << "computing SA ...";
@@ -139,7 +139,6 @@ int main(int argc, char** argv) {
     sdsl::int_vector_buffer<> sa_buf(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
     sdsl::int_vector<40> sa(n);
     {
-        
         for(size_t i = 0; i < n; i++) {
             sa[i] = sa_buf[i];
         }
@@ -151,7 +150,7 @@ int main(int argc, char** argv) {
     std::cout << "RESULT file=" << argv[1];
 
     // n
-    std::cout << " n=" << n; std::cout.flush();
+    std::cout << " n=" << actual_n; std::cout.flush();
 
     // alphabet and H0 entropy
     std::cout << " sigma="; std::cout.flush();
@@ -161,13 +160,13 @@ int main(int argc, char** argv) {
         size_t hist[256];
         for(size_t c = 0; c < 256; c++) hist[c] = 0;
 
-        for(auto c : text) ++hist[c];
+        for(size_t i = 0; i < actual_n; i++) ++hist[text[i]];
 
         for(size_t c = 0; c < 256; c++) {
             auto const nc = hist[c];
             if(nc) {
                 ++sigma;
-                h0 += (double(nc) / double(n)) * std::log2(double(n) / double(nc));
+                h0 += (double(nc) / double(actual_n)) * std::log2(double(actual_n) / double(nc));
             }
         }
     }
@@ -185,7 +184,7 @@ int main(int argc, char** argv) {
         uint8_t last = bwt(0);
         for(size_t i = 1; i < n; i++) {
             auto const c = bwt(i);
-            if(c != last) ++r;
+            if(last != 0 && c != last) ++r;
             last = c;
         }
     }
@@ -198,13 +197,15 @@ int main(int argc, char** argv) {
         Trie trie;
 
         auto v = trie.root();
-        for(auto c : text) {
+        for(size_t i = 0; i < actual_n; i++) {
+            auto const c = text[i];
             if(!trie.try_get_child(v, c, v)) {
                 trie.insert_child(v, c);
                 v = trie.root();
                 ++z78;
             }
         }
+        if(v != trie.root()) ++z78; // final phrase
     }
     std::cout << z78;
 
@@ -215,7 +216,7 @@ int main(int argc, char** argv) {
         sdsl::construct_isa(cc);
         sdsl::int_vector_buffer<> isa(sdsl::cache_file_name(sdsl::conf::KEY_ISA, cc));
         
-        for(size_t i = 0; i < n;) {
+        for(size_t i = 0; i < actual_n;) {
             auto const cur_pos = isa[i];
 
             // compute PSV and NSV
@@ -251,32 +252,23 @@ int main(int argc, char** argv) {
         sdsl::int_vector_buffer<> lcp(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
 
         std::vector<uint32_t> dk(n, 0);
-        for(size_t i=1; i < n; i++) {
+        for(size_t i = 1; i < n; i++) {
             dk[lcp[i]+1]++;
         }
 
-        double delta_i = 0;
-	    double dk_value = 0;
-        size_t argmax = 0;
-        size_t lrs = 0;
-
-        for(size_t i=1; i < n; i++){
-            dk_value = dk_value + dk[i] - 1;
-            delta_i = dk_value / i;
-
-            if(dk_value < lcp.size() - i) {
-                lrs = i;
-            }
-
-            if(delta_i > delta){
-                argmax = i;
-                delta = delta_i;
-            }
+        double x = dk[1];
+        delta = x;
+        for(size_t k = 2; k < n; k++) {
+            x = x + dk[k] - 1;
+            delta = std::max(delta, x / k);
         }
         sdsl::remove(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
     }
     std::cout << std::fixed << delta; std::cout.flush();
     std::cout << std::endl;
+
+    sdsl::remove(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
+    sdsl::remove(sdsl::cache_file_name(sdsl::conf::KEY_TEXT, cc));
 
     return 0;
 }
