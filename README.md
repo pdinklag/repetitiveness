@@ -32,7 +32,7 @@ make
 
 ### Requirements
 
-This tool requires the [SDSL ](https://github.com/xxsds/sdsl-lite/)to be installed on your system.
+This tool requires the [SDSL ](https://github.com/xxsds/sdsl-lite/)to be installed on your system. If it is not installed at a standard location, pass `-DSDSL_ROOT_DIR=/path/to/sdsl` to `cmake`.
 
 Because the SDSL uses divsufsort for suffix sorting, the input file **must not contain any zero bytes**, except for the very last byte (sentinel). Unless the sentinel is present at the end of the input, it is appended automatically, potentially causing off-by-one errors in the measures.
 
