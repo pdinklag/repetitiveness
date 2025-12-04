@@ -86,7 +86,7 @@ public:
 
 int main(int argc, char** argv) {
     if(argc < 2) {
-        std::cerr << "usage: " << argv[0] << " <FILE> [prefix]" << std::endl;
+        std::cerr << "usage: " << argv[0] << " <FILE> [prefix] [suffix-array] [lcp-array]" << std::endl;
         return -1;
     }
 
@@ -131,12 +131,21 @@ int main(int argc, char** argv) {
     auto const actual_n = n - 1; // not taking into account the sentinel
 
     // construct SA
-    std::cerr << "computing SA ...";
-    std::cerr.flush();
-    sdsl::construct_sa<8>(cc);
+    sdsl::int_vector_buffer<> sa_buf;
+    if(argc >= 4) {
+        std::cerr << "loading SA ...";
+        std::cerr.flush();
+
+        sa_buf = sdsl::int_vector_buffer<>(argv[3]);
+    } else {
+        std::cerr << "computing SA ...";
+        std::cerr.flush();
+
+        sdsl::construct_sa<8>(cc);
+        sa_buf = sdsl::int_vector_buffer<>(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
+    }
 
     // cache SA in RAM
-    sdsl::int_vector_buffer<> sa_buf(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
     sdsl::int_vector<> sa;
     sa.width(sa_buf.width());
     sa.resize(n);
@@ -251,8 +260,13 @@ int main(int argc, char** argv) {
     std::cout << " delta="; std::cout.flush();
     double delta = 0;
     {
-        sdsl::construct_lcp_PHI<8>(cc);
-        sdsl::int_vector_buffer<> lcp(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
+        sdsl::int_vector_buffer<> lcp;
+        if(argc >= 5) {
+            lcp = sdsl::int_vector_buffer<>(argv[4]);
+        } else {
+            sdsl::construct_lcp_PHI<8>(cc);
+            lcp = sdsl::int_vector_buffer<>(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
+        }
 
         std::vector<uint32_t> dk(n, 0);
         for(size_t i = 1; i < n; i++) {
