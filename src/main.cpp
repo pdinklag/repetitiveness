@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
     size_t prefix = SIZE_MAX;
     if(argc >= 3) {
         prefix = std::atoll(argv[2]);
+        if(prefix == 0) prefix = SIZE_MAX;
     }
 
     sdsl::cache_config cc;
