@@ -219,12 +219,12 @@ int main(int argc, char** argv) {
         sdsl::int_vector_buffer<> isa(sdsl::cache_file_name(sdsl::conf::KEY_ISA, cc));
         
         for(size_t i = 0; i < actual_n;) {
-            auto const cur_pos = isa[i];
+            size_t const cur_pos = isa[i];
 
             // compute PSV and NSV
             auto lce = [&](size_t const i, size_t const j) {
                 size_t l = 0;
-                while(i + l < n && j + l < n && text[i + l] == text[j + l]) ++l;
+                while(i + l < actual_n && j + l < actual_n && text[i + l] == text[j + l]) ++l;
 
                 return l;
             };
@@ -234,11 +234,12 @@ int main(int argc, char** argv) {
             size_t const psv_lcp = psv_pos >= 0 ? lce(i, sa[psv_pos]) : 0;
 
             size_t nsv_pos = cur_pos + 1;
-            while(nsv_pos < n && sa[nsv_pos] > i) ++nsv_pos;
-            size_t const nsv_lcp = nsv_pos < n ? lce(i, sa[nsv_pos]) : 0;
+            while(nsv_pos < actual_n && sa[nsv_pos] > i) ++nsv_pos;
+            size_t const nsv_lcp = nsv_pos < actual_n ? lce(i, sa[nsv_pos]) : 0;
 
             // select maximum and advance
-            auto const factor_len = std::max(size_t(1), std::max(psv_lcp, nsv_lcp));
+            auto const max_lcp = std::max(psv_lcp, nsv_lcp); // nb: may be zero
+            auto const factor_len = std::max(size_t(1), max_lcp);
             i += factor_len;
             ++z77;
         }
