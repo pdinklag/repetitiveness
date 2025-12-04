@@ -137,7 +137,9 @@ int main(int argc, char** argv) {
 
     // cache SA in RAM
     sdsl::int_vector_buffer<> sa_buf(sdsl::cache_file_name(sdsl::conf::KEY_SA, cc));
-    sdsl::int_vector<40> sa(n);
+    sdsl::int_vector<> sa;
+    sa.width(sa_buf.width());
+    sa.resize(n);
     {
         for(size_t i = 0; i < n; i++) {
             sa[i] = sa_buf[i];
