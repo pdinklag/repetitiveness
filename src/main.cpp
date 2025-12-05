@@ -138,6 +138,7 @@ int main(int argc, char** argv) {
         std::cerr.flush();
 
         sa_buf = sdsl::int_vector_buffer<>(argv[3]);
+        cc.file_map[sdsl::conf::KEY_SA] = argv[3];
     } else {
         std::cerr << "computing SA ...";
         std::cerr.flush();
@@ -264,6 +265,7 @@ int main(int argc, char** argv) {
         sdsl::int_vector_buffer<> lcp;
         if(argc >= 5) {
             lcp = sdsl::int_vector_buffer<>(argv[4]);
+            cc.file_map[sdsl::conf::KEY_SA] = argv[4];
         } else {
             sdsl::construct_lcp_PHI<8>(cc);
             lcp = sdsl::int_vector_buffer<>(sdsl::cache_file_name(sdsl::conf::KEY_LCP, cc));
